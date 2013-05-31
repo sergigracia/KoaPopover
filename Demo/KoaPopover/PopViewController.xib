@@ -80,7 +80,7 @@
 						<int key="IBUIContentVerticalAlignment">0</int>
 					</object>
 				</array>
-				<string key="NSFrameSize">{146, 192}</string>
+				<string key="NSFrameSize">{367, 472}</string>
 				<reference key="NSSuperview"/>
 				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="15619069"/>

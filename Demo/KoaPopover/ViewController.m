@@ -32,7 +32,22 @@
     [popVC setContentSizeForViewInPopover:popVC.view.frame.size];
     self.popover = [[KoaPopover alloc] initWithContentViewController:popVC];
     [self.popover setDelegate:self];
-    [self.popover presentPopoverFromObject:button setArrowDirection:UIPopoverArrowDirectionRight animated:YES];
+    [self.popover presentPopoverFromObject:button setArrowDirection:UIPopoverArrowDirectionLeft animated:YES];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
+{
+    return YES;
+}
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    [self.popover willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+    [self.popover didRotateFromInterfaceOrientation:fromInterfaceOrientation];
 }
 
 - (void)didReceiveMemoryWarning

@@ -16,6 +16,10 @@
 
 - (void)presentPopoverFromObject:(id)object setArrowDirection:(UIPopoverArrowDirection)arrowDirection animated:(BOOL)animated;
 - (id)initWithContentViewController:(UIViewController *)contentViewController;
+- (void)dismissPopoverAnimated:(BOOL)animated;
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 
 @end
 
