@@ -9,6 +9,11 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
+typedef enum {
+    KoaPopoverWidthAdaptable = 0,
+    KoaPopoverWidthFullWidth,
+} KoaPopoverWidth;
+
 @protocol KoaPopoverControllerDelegate;
 @interface KoaPopover : UIViewController <UIGestureRecognizerDelegate>
 
@@ -20,6 +25,9 @@
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
+
+- (void)setPopoverSizeAs:(KoaPopoverWidth)kindOfSize;
+- (void)setPopoverBorderColorAs:(UIColor *)borderColor;
 
 @end
 
