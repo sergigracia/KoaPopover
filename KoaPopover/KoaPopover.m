@@ -7,6 +7,8 @@
 //
 
 #import "KoaPopover.h"
+#import "NSString+FontAwesome.h"
+#import "UIFont+FontAwesome.h"
 
 static CGFloat KoaPopoverBorderWidth = 2;
 static CGFloat KoaPopoverBorderRadius = 7;
@@ -28,6 +30,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 
 @property (nonatomic) UIPopoverArrowDirection arrowDirection;
 @property (nonatomic, strong) UIColor *koaPopoverBorderColor;
+@property (nonatomic) int KoaPopoverStyleWidth;
 
 @end
 
@@ -38,7 +41,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     //Get object global position
     //CGPoint objectGlobalOrigin = [((UIView *)object).superview convertPoint:((UIView *)object).frame.origin toView:[[UIApplication sharedApplication] keyWindow]];
     //CGSize objectGlobalSize = ((UIView *)object).frame.size;
-
+    
     //To do...
 }
 
@@ -46,12 +49,12 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 {
 	self.arrowDirection = arrowDirection;
     self.objectFromPresent = object;
-
+    
 	//Check popover arrow directions
     if (self.arrowDirection == UIPopoverArrowDirectionAny || self.arrowDirection == UIPopoverArrowDirectionUnknown) {
         NSLog(@"Any or Unknown are not supported, you have to set left, top, right or bottom");
     }
-
+    
     //Set arrow
     switch (arrowDirection) {
         case UIPopoverArrowDirectionRight:
@@ -61,11 +64,11 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
         case UIPopoverArrowDirectionLeft:
             [self.arrow setText:[NSString fontAwesomeIconStringForIconIdentifier:@"icon-caret-left"]];
             break;
-        
+            
         case UIPopoverArrowDirectionUp:
             [self.arrow setText:[NSString fontAwesomeIconStringForIconIdentifier:@"icon-caret-up"]];
             break;
-        
+            
         case UIPopoverArrowDirectionDown:
             [self.arrow setText:[NSString fontAwesomeIconStringForIconIdentifier:@"icon-caret-down"]];
             break;
@@ -82,9 +85,19 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     
 	//Set popover frame
 	[self setPopoverFrameFromObject:object];
-
+    
 	//Show the popover
 	[self showPopoverAnimated:animated];
+}
+
+- (void)setPopoverSizeAs:(KoaPopoverWidth)kindOfSize
+{
+    self.KoaPopoverStyleWidth = kindOfSize;
+}
+
+- (void)setPopoverBorderColorAs:(UIColor *)borderColor
+{
+    self.koaPopoverBorderColor = borderColor;
 }
 
 - (void)setPopoverFrameFromObject:(id)object
@@ -103,7 +116,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     
     //Set popover origin
     switch (self.arrowDirection) {
-        
+            
         case UIPopoverArrowDirectionLeft:
             
             popoverOrigin = CGPointMake(objectGlobalOrigin.x + objectGlobalSize.width + KoaPopoverMarginFromObject,
@@ -113,9 +126,9 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
                                              objectGlobalOrigin.y + objectGlobalSize.height/2 - self.arrow.frame.size.height/2);
             
             break;
-        
+            
         case UIPopoverArrowDirectionRight:
-
+            
             popoverOrigin = CGPointMake(objectGlobalOrigin.x - popoverSize.width - KoaPopoverMarginFromObject - KoaPopoverBorderWidth*2,
                                         objectGlobalOrigin.y);
             
@@ -126,25 +139,34 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
             
         case UIPopoverArrowDirectionUp:
             
-            popoverOrigin = CGPointMake((objectGlobalOrigin.x + objectGlobalSize.width/2) - popoverSize.width/2,
-                                        objectGlobalOrigin.y + objectGlobalSize.height + KoaPopoverMarginFromObject);
+            if (self.KoaPopoverStyleWidth == KoaPopoverWidthFullWidth) {
+                popoverOrigin = CGPointMake(0, objectGlobalOrigin.y + objectGlobalSize.height + KoaPopoverMarginFromObject);
+            }
+            else { //KoaPopoverWidthAdaptable
+                popoverOrigin = CGPointMake((objectGlobalOrigin.x + objectGlobalSize.width/2) - popoverSize.width/2,
+                                            objectGlobalOrigin.y + objectGlobalSize.height + KoaPopoverMarginFromObject);
+            }
             
             popoverArrowOrigin = CGPointMake((objectGlobalOrigin.x + objectGlobalSize.width/2) - self.arrow.frame.size.width/2,
                                              objectGlobalOrigin.y + objectGlobalSize.height + KoaPopoverMarginFromObject - self.arrow.frame.size.height/2 - 5);
             
             break;
-        
+            
         case UIPopoverArrowDirectionDown:
             
-            popoverOrigin = CGPointMake((objectGlobalOrigin.x + objectGlobalSize.width/2) - popoverSize.width/2,
-                                        objectGlobalOrigin.y - popoverSize.height - KoaPopoverMarginFromObject - KoaPopoverBorderWidth*2);
-            
+            if (self.KoaPopoverStyleWidth == KoaPopoverWidthFullWidth) {
+                popoverOrigin = CGPointMake(0, objectGlobalOrigin.y - popoverSize.height - KoaPopoverMarginFromObject - KoaPopoverBorderWidth*2);
+            }
+            else { //KoaPopoverWidthAdaptable
+                popoverOrigin = CGPointMake((objectGlobalOrigin.x + objectGlobalSize.width/2) - popoverSize.width/2,
+                                            objectGlobalOrigin.y - popoverSize.height - KoaPopoverMarginFromObject - KoaPopoverBorderWidth*2);
+            }
             popoverArrowOrigin = CGPointMake((objectGlobalOrigin.x + objectGlobalSize.width/2) - self.arrow.frame.size.width/2,
                                              objectGlobalOrigin.y - KoaPopoverMarginFromObject - KoaPopoverBorderWidth*2 - 9);
             
             break;
             
-        
+            
         default:
             break;
     }
@@ -163,7 +185,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
                               popoverOrigin.y,
                               self.contentViewController.contentSizeForViewInPopover.width + KoaPopoverBorderWidth*2,
                               self.contentViewController.contentSizeForViewInPopover.height + KoaPopoverBorderWidth*2);
-
+    
     //Create container
     if (!self.containerView) {
         //Init container view
@@ -210,12 +232,12 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     CGRect popoverFrame = containerView.frame;
     
     //Check marings between popover and mainscreen limits
-
+    
     //Check RIGHT
     if ((popoverFrame.origin.x + popoverFrame.size.width + KoaPopoverMarginFromMainScreen) > mainScreenSize.width) {
         
         int diff = abs((popoverFrame.origin.x + popoverFrame.size.width + KoaPopoverMarginFromMainScreen) - mainScreenSize.width);
-    
+        
         //Check if we can move the popover to the left
         if (popoverFrame.origin.x - diff > KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionLeft) {
             [containerView setFrame:CGRectMake(popoverFrame.origin.x - diff,
@@ -307,7 +329,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     if (self) {
         // Custom initialization
 		self.contentViewController = contentViewController;
-        self.koaPopoverBorderColor = [UIColor colorWithRed:51/255.f green:51/255.f blue:51/255.f alpha:1];
+        self.koaPopoverBorderColor = [UIColor colorWithRed:51/255.f green:51/255.f blue:51/255.f alpha:1]; //defaultColor
         self.arrow = [[UILabel alloc] init];
         [self.arrow setBackgroundColor:[UIColor clearColor]];
         [self.arrow setFont:[UIFont iconicFontOfSize:32]];
@@ -425,7 +447,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 	} completion:nil];
 }
 
-     
+
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
     NSLog(@"DID ROTATE");
@@ -433,7 +455,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     
     //Set popover frame
 	[self setPopoverFrameFromObject:self.objectFromPresent];
-        
+    
     [UIView animateWithDuration:0.1 animations:^{
 		self.view.alpha = 1.0;
 	} completion:nil];
@@ -452,15 +474,11 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
         size = CGSizeMake(size.height, size.width);
     }
-//    if (application.statusBarHidden == NO) {
-//        size.height -= MIN(application.statusBarFrame.size.width, application.statusBarFrame.size.height);
-//    }
+    //    if (application.statusBarHidden == NO) {
+    //        size.height -= MIN(application.statusBarFrame.size.width, application.statusBarFrame.size.height);
+    //    }
     size.height -= self.navigationController.navigationBar.frame.size.height;
     return size;
 }
 
 @end
-
-
-
-
