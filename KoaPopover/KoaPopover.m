@@ -172,14 +172,24 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     }else{
         [self.containerView setFrame:frame];
     }
+
+    NSLog(@"ContainerView: %@", NSStringFromCGRect(self.containerView.frame));
     
     //Add content to container
 	if (![self.contentViewController.view isDescendantOfView:self.containerView]) {
+        
+        //Avoid autoresize
+        [self.contentViewController.view setAutoresizingMask:UIViewAutoresizingNone];
+        [self.contentViewController.view setAutoresizesSubviews:NO];
+        
+        //Add subview
         [self.containerView addSubview:self.contentViewController.view];
     }
     
     //Check main screen margins
     [self checkMainScreenMarginsOfView:self.containerView];
+    
+    NSLog(@"ContainerView: %@", NSStringFromCGRect(self.containerView.frame));
     
     //Add container to popover view
     if (![self.containerView isDescendantOfView:self.view]) {
@@ -187,6 +197,8 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
         //Customize popover (border, corners..)
         [self customizePopover:self.containerView];
     }
+    
+    NSLog(@"ContainerView: %@", NSStringFromCGRect(self.containerView.frame));
     
     //Add arrow to popover view
 	if (![self.arrow isDescendantOfView:self.view]) {
@@ -196,7 +208,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 
 - (void)showPopoverAnimated:(BOOL)animated
 {
-    CGFloat animationSpeed = animated ? 0.4f : 0.0f;
+    CGFloat animationSpeed = animated ? 0.3f : 0.0f;
 	self.view.alpha = 0.0;
 	[UIView animateWithDuration:animationSpeed animations:^{
 		self.view.alpha = 1.0;
@@ -205,87 +217,166 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 
 - (void)checkMainScreenMarginsOfView:(UIView *)containerView
 {
-    //CGSize mainScreenSize = [[UIApplication sharedApplication] delegate].window.frame.size;
     CGSize mainScreenSize = [self getCurrentScreenSize];
     CGRect popoverFrame = containerView.frame;
-    
-    //Check marings between popover and mainscreen limits
 
-    //Check RIGHT
-    if ((popoverFrame.origin.x + popoverFrame.size.width + KoaPopoverMarginFromMainScreen) > mainScreenSize.width) {
+    //Check if width is bigger than mainScreen width
+    if ((popoverFrame.size.width + KoaPopoverMarginFromMainScreen*2) > mainScreenSize.width) {
         
-        int diff = abs((popoverFrame.origin.x + popoverFrame.size.width + KoaPopoverMarginFromMainScreen) - mainScreenSize.width);
-    
-        //Check if we can move the popover to the left
-        if (popoverFrame.origin.x - diff > KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionLeft) {
-            [containerView setFrame:CGRectMake(popoverFrame.origin.x - diff,
-                                               popoverFrame.origin.y,
-                                               popoverFrame.size.width,
-                                               popoverFrame.size.height)];
-        }else{
-            [containerView setFrame:CGRectMake(popoverFrame.origin.x,
-                                               popoverFrame.origin.y,
-                                               popoverFrame.size.width - diff,
-                                               popoverFrame.size.height)];
+        popoverFrame.size.width = mainScreenSize.width - KoaPopoverMarginFromMainScreen*2;
+        
+        //If arrow is to the right we have to move the frame to put on the correct position
+        if (self.arrowDirection == UIPopoverArrowDirectionRight) {
+            popoverFrame.origin.x += abs(containerView.frame.size.width - popoverFrame.size.width);
         }
-        popoverFrame = containerView.frame;
+    }
+
+    //Check if height is bigger than mainScreen height
+    if ((popoverFrame.size.height + KoaPopoverMarginFromMainScreen*2) > mainScreenSize.height) {
+        popoverFrame.size.height = mainScreenSize.height - KoaPopoverMarginFromMainScreen*2;
+        
+        //If arrow is to down we have to move the frame to put on the correct position
+        if (self.arrowDirection == UIPopoverArrowDirectionDown) {
+            popoverFrame.origin.y += abs(containerView.frame.size.height - popoverFrame.size.height);
+        }
+    }
+
+    switch (self.arrowDirection) {
+        
+        case UIPopoverArrowDirectionRight:
+            popoverFrame = [self checkLeftMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkTopMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkBottomMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            break;
+        
+        case UIPopoverArrowDirectionLeft:
+            popoverFrame = [self checkRightMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkTopMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkBottomMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            break;
+        
+        case UIPopoverArrowDirectionUp:
+            popoverFrame = [self checkLeftMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkRightMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkBottomMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            break;
+        
+        case UIPopoverArrowDirectionDown:
+            popoverFrame = [self checkLeftMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkRightMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            popoverFrame = [self checkTopMarginForPopoverFrame:popoverFrame andContainerView:containerView];
+            break;
+            
+        default:
+            break;
     }
     
-    //Check LEFT
+    [containerView setFrame:popoverFrame];
+    
+    //Add observer to resize popover if content changes
+    [self.contentViewController.view addObserver:self forKeyPath:@"frame" options:NSKeyValueObservingOptionNew context:nil];
+}
+
+- (CGRect)checkLeftMarginForPopoverFrame:(CGRect)popoverFrame andContainerView:(UIView *)containerView
+{
+    CGRect newFrame = popoverFrame;
+    CGSize mainScreenSize = [self getCurrentScreenSize];
+    
+    //Is popover out of screen by left side
     if (popoverFrame.origin.x - KoaPopoverMarginFromMainScreen < 0) {
         
         int diff = abs(popoverFrame.origin.x - KoaPopoverMarginFromMainScreen);
         
-        //Check if we can move the popover to the right
-        if (popoverFrame.origin.x + popoverFrame.size.width + diff < mainScreenSize.width - KoaPopoverMarginFromMainScreen  && self.arrowDirection != UIPopoverArrowDirectionRight) {
-            //We can move to the right
-            [containerView setFrame:CGRectMake(popoverFrame.origin.x + diff,
-                                               popoverFrame.origin.y,
-                                               popoverFrame.size.width,
-                                               popoverFrame.size.height)];
+        //Check if we can move right the popover or simply resize it
+        if (popoverFrame.origin.x + diff + KoaPopoverMarginFromMainScreen <= mainScreenSize.width && self.arrowDirection != UIPopoverArrowDirectionRight) {
+            //We can move the popover
+            newFrame = CGRectMake(popoverFrame.origin.x + diff,
+                                  popoverFrame.origin.y,
+                                  popoverFrame.size.width,
+                                  popoverFrame.size.height);
         }else{
-            //We can't move to the right
-            [containerView setFrame:CGRectMake(popoverFrame.origin.x + diff,
-                                               popoverFrame.origin.y,
-                                               popoverFrame.size.width - diff,
-                                               popoverFrame.size.height)];
+            //We can't move so we have to resize
+            newFrame = CGRectMake(popoverFrame.origin.x + diff,
+                                  popoverFrame.origin.y,
+                                  popoverFrame.size.width - diff,
+                                  popoverFrame.size.height);
         }
-        popoverFrame = containerView.frame;
     }
+    
+    return newFrame;
+}
+
+- (CGRect)checkRightMarginForPopoverFrame:(CGRect)popoverFrame andContainerView:(UIView *)containerView
+{
+    CGRect newFrame = popoverFrame;
+    CGSize mainScreenSize = [self getCurrentScreenSize];
+
+    //Is popover out of screen by right side
+    if (popoverFrame.origin.x + popoverFrame.size.width + KoaPopoverMarginFromMainScreen > mainScreenSize.width) {
+        
+        int diff = abs(mainScreenSize.width - (popoverFrame.origin.x + popoverFrame.size.width + KoaPopoverMarginFromMainScreen));
+
+        //Check if we can move left the popover or simply resize it
+        if (popoverFrame.origin.x - diff >= KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionLeft) {
+            //We can move the popover
+            newFrame = CGRectMake(popoverFrame.origin.x - diff,
+                                  popoverFrame.origin.y,
+                                  popoverFrame.size.width,
+                                  popoverFrame.size.height);
+        }else{
+            //We can't move so we have to resize
+            newFrame = CGRectMake(popoverFrame.origin.x,
+                                  popoverFrame.origin.y,
+                                  popoverFrame.size.width - diff,
+                                  popoverFrame.size.height);
+        }
+    }
+    
+    return newFrame;
+}
+
+- (CGRect)checkTopMarginForPopoverFrame:(CGRect)popoverFrame andContainerView:(UIView *)containerView
+{
+    CGRect newFrame = popoverFrame;
+    
+    if (popoverFrame.origin.y - KoaPopoverMarginFromMainScreen < 0) {
+        
+        int diff = abs(popoverFrame.origin.y - KoaPopoverMarginFromMainScreen);
+        
+        newFrame = CGRectMake(popoverFrame.origin.x,
+                              popoverFrame.origin.y + diff,
+                              popoverFrame.size.width,
+                              popoverFrame.size.height - diff);
+    }
+    
+    return newFrame;
+}
+
+- (CGRect)checkBottomMarginForPopoverFrame:(CGRect)popoverFrame andContainerView:(UIView *)containerView
+{
+    CGRect newFrame = popoverFrame;
+    CGSize mainScreenSize = [self getCurrentScreenSize];
     
     //Check BOTTOM
     if ((popoverFrame.origin.y + popoverFrame.size.height + KoaPopoverMarginFromMainScreen) > mainScreenSize.height) {
         
         int diff = (popoverFrame.origin.y + popoverFrame.size.height + KoaPopoverMarginFromMainScreen) - mainScreenSize.height;
-        
-        //Check if we can move the popover to the top
-        if (popoverFrame.origin.y - diff < popoverFrame.origin.y + KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionUp) {
-            //We can move to the top
-            [containerView setFrame:CGRectMake(popoverFrame.origin.x,
-                                               popoverFrame.origin.y - diff - KoaPopoverStatusBarHeight,
-                                               popoverFrame.size.width,
-                                               popoverFrame.size.height)];
+
+        //Check if we can move up the popover or simply resize it
+        if (popoverFrame.origin.y - diff <= KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionUp) {
+            newFrame = CGRectMake(popoverFrame.origin.x,
+                                  popoverFrame.origin.y - diff,
+                                  popoverFrame.size.width,
+                                  popoverFrame.size.height);
         }else{
-            //We can't move to the top
-            [containerView setFrame:CGRectMake(popoverFrame.origin.x,
-                                               popoverFrame.origin.y,
-                                               popoverFrame.size.width,
-                                               popoverFrame.size.height - diff - KoaPopoverStatusBarHeight)];
+            newFrame = CGRectMake(popoverFrame.origin.x,
+                                  popoverFrame.origin.y,
+                                  popoverFrame.size.width,
+                                  popoverFrame.size.height - diff);
         }
-        popoverFrame = containerView.frame;
     }
     
-    //Check TOP
-    if ((popoverFrame.origin.y - KoaPopoverMarginFromMainScreen) < 0) {
-        
-        int diff = abs(popoverFrame.origin.y - KoaPopoverMarginFromMainScreen);
-        
-        [containerView setFrame:CGRectMake(popoverFrame.origin.x,
-                                           popoverFrame.origin.y + diff,
-                                           popoverFrame.size.width,
-                                           popoverFrame.size.height - diff)];
-        popoverFrame = containerView.frame;
-    }
+    return newFrame;
 }
 
 - (void)customizePopover:(UIView *)view
@@ -333,6 +424,34 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 	recognizer.delegate = self;
 	[self.view addGestureRecognizer:recognizer];
 }
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if([keyPath isEqualToString:@"frame"]){
+        CGRect newFrame;
+        
+        if([object valueForKeyPath:keyPath] != [NSNull null]) {
+            newFrame = [[object valueForKeyPath:keyPath] CGRectValue];
+            
+            NSLog(@"New frame: %@", NSStringFromCGRect(newFrame));
+            [self.contentViewController.view removeObserver:self forKeyPath:@"frame"];
+            
+            [UIView animateWithDuration:0.5 animations:^{
+                [self.containerView setFrame:CGRectMake(self.containerView.frame.origin.x,
+                                                        self.containerView.frame.origin.y,
+                                                        newFrame.size.width+4,
+                                                        newFrame.size.height+4)];
+                [self.contentViewController.view setFrame:CGRectMake(self.contentViewController.view.frame.origin.x,
+                                                        self.contentViewController.view.frame.origin.y,
+                                                        newFrame.size.width,
+                                                        newFrame.size.height)];
+            }completion:^(BOOL finished){
+                [self.contentViewController.view addObserver:self forKeyPath:@"frame" options:NSKeyValueObservingOptionNew context:nil];
+            }];
+        }
+    }
+}
+
 
 #pragma mark - UITapGestureRecognizer
 
@@ -452,10 +571,13 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
     if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
         size = CGSizeMake(size.height, size.width);
     }
-//    if (application.statusBarHidden == NO) {
-//        size.height -= MIN(application.statusBarFrame.size.width, application.statusBarFrame.size.height);
-//    }
+    
+    if ([UIApplication sharedApplication].statusBarHidden == NO) {
+        size.height -= MIN([UIApplication sharedApplication].statusBarFrame.size.width, [UIApplication sharedApplication].statusBarFrame.size.height);
+    }
+
     size.height -= self.navigationController.navigationBar.frame.size.height;
+
     return size;
 }
 
