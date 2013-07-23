@@ -215,6 +215,11 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 	}];
 }
 
+- (void)setPopoverBorderColorAs:(UIColor *)borderColor
+{
+    self.koaPopoverBorderColor = borderColor;
+}
+
 - (void)checkMainScreenMarginsOfView:(UIView *)containerView
 {
     CGSize mainScreenSize = [self getCurrentScreenSize];
