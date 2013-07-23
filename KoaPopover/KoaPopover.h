@@ -22,6 +22,8 @@
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
 
+- (void)setPopoverBorderColorAs:(UIColor *)borderColor;
+
 @end
 
 @protocol KoaPopoverControllerDelegate <NSObject>
