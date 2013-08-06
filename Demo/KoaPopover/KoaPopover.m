@@ -179,8 +179,8 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 	if (![self.contentViewController.view isDescendantOfView:self.containerView]) {
         
         //Avoid autoresize
-        [self.contentViewController.view setAutoresizingMask:UIViewAutoresizingNone];
-        [self.contentViewController.view setAutoresizesSubviews:NO];
+        //[self.contentViewController.view setAutoresizingMask:UIViewAutoresizingNone];
+        //[self.contentViewController.view setAutoresizesSubviews:NO];
         
         //Add subview
         [self.containerView addSubview:self.contentViewController.view];
@@ -363,7 +363,7 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
         int diff = (popoverFrame.origin.y + popoverFrame.size.height + KoaPopoverMarginFromMainScreen) - mainScreenSize.height;
 
         //Check if we can move up the popover or simply resize it
-        if (popoverFrame.origin.y - diff <= KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionUp) {
+        if (popoverFrame.origin.y - diff >= KoaPopoverMarginFromMainScreen && self.arrowDirection != UIPopoverArrowDirectionUp) {
             newFrame = CGRectMake(popoverFrame.origin.x,
                                   popoverFrame.origin.y - diff,
                                   popoverFrame.size.width,
