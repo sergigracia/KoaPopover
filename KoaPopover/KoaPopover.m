@@ -87,6 +87,12 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 	[self showPopoverAnimated:animated];
 }
 
+- (void)setPopoverBorderWidth:(int)popoverBorderWidth {
+    
+    KoaPopoverBorderWidth = popoverBorderWidth;
+}
+
+
 - (void)setPopoverFrameFromObject:(id)object
 {
     CGSize popoverSize;

@@ -24,6 +24,8 @@
 
 - (void)setPopoverBorderColorAs:(UIColor *)borderColor;
 
+- (void)setPopoverBorderWidth:(int)popoverBorderWidth;
+
 @end
 
 @protocol KoaPopoverControllerDelegate <NSObject>
