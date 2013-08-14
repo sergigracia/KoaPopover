@@ -87,15 +87,11 @@ static CGFloat KoaPopoverStatusBarHeight = 20;
 	[self showPopoverAnimated:animated];
 }
 
-- (void)setPopoverWithoutBorder:(BOOL)popoverWithoutBorder {
-    //We decide to use the default popover width or not use border
-    if (popoverWithoutBorder) {
-        KoaPopoverBorderWidth = 0;
-    }
-    else {
-        KoaPopoverBorderWidth = 2;
-    }
+- (void)setPopoverBorderWidth:(int)popoverBorderWidth {
+    
+    KoaPopoverBorderWidth = popoverBorderWidth;
 }
+
 
 - (void)setPopoverFrameFromObject:(id)object
 {
