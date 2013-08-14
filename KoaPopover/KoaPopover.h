@@ -21,6 +21,8 @@
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 
+- (void)setPopoverWithoutBorder:(BOOL)popoverWithoutBorder;
+
 @end
 
 @protocol KoaPopoverControllerDelegate <NSObject>
